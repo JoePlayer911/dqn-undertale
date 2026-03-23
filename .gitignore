@@ -1,0 +1,13 @@
+# Environments
+venv/
+env/
+.env
+
+# Python compilation files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary backups / notes
+backup/
+plan.txt
