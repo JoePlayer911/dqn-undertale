@@ -109,11 +109,14 @@ def extract_grid_threats_dynamic(img_bgr, white_mask, hx, hy, B, play_area, grid
             x1, x2 = x_bounds[col], x_bounds[col+1]
             y1, y2 = y_bounds[row], y_bounds[row+1]
             
-            # Determine if this box is out of bounds or inside our purple masks
-            cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+            # Only acknowledge the wall as a 'bullet' if we are in the inner-most rings (e.g., ring 1 or 2)
+            # This allows the player to drift closer to the wall without panic.
             oob_penalty = 0
             if cx < mask_left or cx >= mask_right or cy < mask_top or cy >= mask_bottom:
-                oob_penalty = 100 # Treat out of bounds as a solid block of bullets
+                if ring <= 2: 
+                    oob_penalty = 150 # Treat very close walls as a solid block of threat
+                else:
+                    oob_penalty = 0 # Ignore far-away walls to allow closer movement
             
             x1_c, y1_c = max(0, min(w, x1)), max(0, min(h, y1))
             x2_c, y2_c = max(0, min(w, x2)), max(0, min(h, y2))
@@ -384,8 +387,9 @@ def main():
             center_dy = arena_cy - hy
             center_dist = max(1, np.sqrt(center_dx**2 + center_dy**2))
             
-            # The further from center, the stronger the pull
-            center_pull = min(center_dist * 0.5, 60) # Caps at 60 to not override real threats
+            # The further from center, the stronger the pull. 
+            # Lowering the multiplier (0.5 -> 0.2) lets the agent be more comfortable near walls.
+            center_pull = min(center_dist * 0.2, 40) 
             norm_cx = center_dx / center_dist
             norm_cy = center_dy / center_dist
             
