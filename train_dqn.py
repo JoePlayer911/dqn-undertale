@@ -145,7 +145,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train DQN Agent for Undertale")
     parser.add_argument("--render", action="store_true", help="Render the environment in a GUI window")
     parser.add_argument("--episodes", type=int, default=500, help="Number of episodes to train")
-    parser.add_argument("--difficulty", type=int, default=50, help="Bullet difficulty (0-100)")
+    parser.add_argument("--difficulty", type=int, default=10, help="Bullet difficulty (0-100)")
     parser.add_argument("--pattern", type=str, default="random", help="Bullet pattern (random, rain_down, aimed, mixed, rain_sides)")
     parser.add_argument("--no-resume", action="store_true", help="Start fresh, ignoring existing checkpoints")
     parser.add_argument("--model", type=str, default="", help="Specific checkpoint to load (default: auto-load latest)")
