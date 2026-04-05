@@ -147,6 +147,7 @@ def main():
     parser.add_argument("--episodes", type=int, default=500, help="Number of episodes to train")
     parser.add_argument("--difficulty", type=int, default=10, help="Bullet difficulty (0-100)")
     parser.add_argument("--pattern", type=str, default="random", help="Bullet pattern (random, rain_down, aimed, mixed, rain_sides)")
+    parser.add_argument("--goal", type=int, default=500, help="Target goal for survival (max steps per episode)")
     parser.add_argument("--no-resume", action="store_true", help="Start fresh, ignoring existing checkpoints")
     parser.add_argument("--model", type=str, default="", help="Specific checkpoint to load (default: auto-load latest)")
     args = parser.parse_args()
@@ -162,7 +163,7 @@ def main():
 
     # Set up environment
     render_mode = "human" if args.render else None
-    env = UndertaleEnv(render_mode=render_mode, pattern=args.pattern, difficulty=args.difficulty)
+    env = UndertaleEnv(render_mode=render_mode, pattern=args.pattern, difficulty=args.difficulty, max_steps=args.goal)
     num_actions = env.action_space.n
     
     # We will stack 4 frames. Input shape: (4, 84, 84)
@@ -229,6 +230,12 @@ def main():
             
             # Save to memory
             done = terminated or truncated
+            
+            # Goal bonus: if the agent survived until the goal (truncated), 
+            # give a large reward to differentiate it from just dying at the end.
+            if truncated and not terminated:
+                reward += 150.0  # Big bonus for reaching the target!
+                
             agent.memory.push(state, action, reward, next_state, done)
 
             # Update state
@@ -245,7 +252,8 @@ def main():
                 agent.save(f"{save_dir}/dqn_checkpoint_step_{global_step}.pth")
 
             if done:
-                print(f"Episode: {e+1:4d}/{episodes} | Score: {episode_reward:7.1f} | Steps: {info['step']:4d} | Epsilon: {agent.epsilon:.3f} | Hit: {info['hit']}")
+                status = "SURVIVED (GOAL)" if truncated and not terminated else "DIED (HIT)"
+                print(f"Episode: {e+1:4d}/{episodes} | {status} | Score: {episode_reward:7.1f} | Steps: {info['step']:4d} | Epsilon: {agent.epsilon:.3f}")
                 break
                 
         if (e + 1) % 50 == 0:
